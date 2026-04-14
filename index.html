@@ -129,11 +129,8 @@
 <div id="screen-email" class="screen active" style="background:#0f172a;">
   <div class="min-h-dvh flex flex-col items-center justify-center px-6 py-12">
 
-    <div class="relative mb-6">
-      <div class="w-24 h-24 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/40">
-        <i class="ri-sword-line text-white text-5xl"></i>
-      </div>
-      <div class="absolute -top-2 -right-2 lv-badge text-white">NEW</div>
+    <div class="mb-5">
+      <img src="kirari-logo.png" alt="きらり保育園" class="w-32 mx-auto" style="filter: brightness(0) invert(1); opacity: 0.9;">
     </div>
 
     <h1 class="text-3xl font-black text-white mb-1 tracking-tight">KIRARI ACADEMY</h1>
@@ -380,6 +377,48 @@
 </div><!-- #app -->
 
 <script>
+// ========== サウンド ==========
+let _audioCtx = null;
+function _audio() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _audioCtx;
+}
+function _note(freq, startSec, dur, vol = 0.18, type = 'square') {
+  try {
+    const ctx  = _audio();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + startSec);
+    gain.gain.setValueAtTime(vol, ctx.currentTime + startSec);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startSec + dur);
+    osc.start(ctx.currentTime + startSec);
+    osc.stop(ctx.currentTime + startSec + dur + 0.05);
+  } catch(e) {}
+}
+function sfxStep() {  // ミッション1問クリア
+  _note(659, 0,    0.08);
+  _note(880, 0.07, 0.12);
+}
+function sfxClear() {  // テーマ制覇ファンファーレ
+  _note(523,  0,    0.12);
+  _note(659,  0.12, 0.12);
+  _note(784,  0.24, 0.12);
+  _note(1047, 0.36, 0.55, 0.22);
+  _note(784,  0.38, 0.12, 0.07);  // ハーモニー
+}
+function sfxMaster() {  // 全制覇グランドフィナーレ
+  const m = [523,659,784,1047,784,1047,1319];
+  const t = [0, 0.12, 0.24, 0.36, 0.54, 0.66, 0.82];
+  const d = [0.12,0.12,0.12,0.16,0.1,0.14,1.0];
+  m.forEach((f,i) => _note(f, t[i], d[i], i===6?0.28:0.2));
+  // ベース
+  _note(130, 0, 0.5, 0.1, 'sine');
+  _note(196, 0.5, 0.5, 0.1, 'sine');
+  _note(261, 1.0, 0.9, 0.12, 'sine');
+}
+
 // ========== Supabase ==========
 const SUPABASE_URL  = 'https://gnerbodlppnufbtusknx.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImduZXJib2RscHBudWZidHVza254Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0ODUyNTAsImV4cCI6MjA5MDA2MTI1MH0.rYgwQjhlRgUMhUuvRe3GLuIngFg71eX8_sD63UIYMxg';
@@ -891,6 +930,7 @@ function nextMission() {
   if (state.currentMission < theme.missions.length - 1) {
     state.currentMission++;
     renderMission();
+    sfxStep();
     showToast('+50 XP 獲得！', 'ri-star-fill');
   } else {
     // 全ミッション完了 → 課題認識変化を聞く
