@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>きらりアカデミー</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css" rel="stylesheet">
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <style>
+    body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; background: #0f172a; color: #f8fafc; overflow-x: hidden; }
+
+    .screen {
+      position: absolute; top: 0; left: 0;
+      width: 100%; min-height: 100dvh;
+      transform: translateX(100%);
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+    }
+    .screen.active { transform: translateX(0); }
+
+    @keyframes xpFill {
+      from { width: var(--xp-from); }
+      to   { width: var(--xp-to); }
+    }
+    .xp-fill { transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+    @keyframes cardPop {
+      0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+      60%  { transform: scale(1.15) rotate(3deg); }
+      80%  { transform: scale(0.95) rotate(-1deg); }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    .card-pop { animation: cardPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+    @keyframes shine {
+      0%   { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    .kira {
+      background: linear-gradient(105deg,
+        transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%);
+      background-size: 200% auto;
+      animation: shine 2s linear infinite;
+    }
+
+    @keyframes particle {
+      0%   { transform: translate(0,0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+    }
+    .particle { animation: particle 0.8s ease-out forwards; }
+
+    @keyframes xpPop {
+      0%   { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-60px); opacity: 0; }
+    }
+    .xp-popup { animation: xpPop 1.2s ease-out forwards; }
+
+    @keyframes toastIn {
+      from { transform: translateY(-80px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+    .toast-in { animation: toastIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+
+    textarea, input, select {
+      background: #1e293b !important;
+      color: #f1f5f9 !important;
+      border: 2px solid #334155 !important;
+      border-radius: 12px !important;
+    }
+    textarea:focus, input:focus, select:focus {
+      border-color: #6366f1 !important;
+      outline: none !important;
+    }
+    textarea::placeholder, input::placeholder { color: #64748b !important; }
+    option { background: #1e293b; }
+
+    .mission-box {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .status-bar {
+      background: #0f172a;
+      border-bottom: 1px solid #1e293b;
+      position: sticky; top: 0; z-index: 50;
+    }
+
+    .lv-badge {
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      border-radius: 8px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .email-glow {
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+      border-color: #6366f1 !important;
+    }
+  </style>
+</head>
+<body>
+
+<!-- トースト -->
+<div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] pointer-events-none hidden">
+  <div class="bg-indigo-600 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2 text-sm font-bold whitespace-nowrap toast-in">
+    <i id="toast-icon" class="ri-medal-line text-yellow-300 text-lg"></i>
+    <span id="toast-text"></span>
+  </div>
+</div>
+
+<!-- XPポップアップ -->
+<div id="xp-popup" class="fixed top-1/2 left-1/2 -translate-x-1/2 z-[99] pointer-events-none hidden text-3xl font-black text-yellow-400 drop-shadow-lg">+500 XP</div>
+
+<div id="app" style="position:relative; min-height:100dvh;">
+
+<!-- ========== SCREEN: メール入力（最初の画面）========== -->
+<div id="screen-email" class="screen active" style="background:#0f172a;">
+  <div class="min-h-dvh flex flex-col items-center justify-center px-6 py-12">
+
+    <div class="relative mb-6">
+      <div class="w-24 h-24 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/40">
+        <i class="ri-sword-line text-white text-5xl"></i>
+      </div>
+      <div class="absolute -top-2 -right-2 lv-badge text-white">NEW</div>
+    </div>
+
+    <h1 class="text-3xl font-black text-white mb-1 tracking-tight">KIRARI ACADEMY</h1>
+    <p class="text-indigo-400 text-sm mb-8">きらり保育士 育成システム</p>
+
+    <!-- 続きから（savedがある場合に表示） -->
+    <div id="resume-banner" class="hidden w-full max-w-sm mb-4 fade-in">
+      <button onclick="resumeGame()"
+        class="w-full py-4 rounded-xl font-black text-base bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30 active:scale-95 transition-all flex items-center justify-center gap-2">
+        <i class="ri-refresh-line"></i> 続きからプレイ
+        <span id="resume-info" class="text-emerald-200 text-xs font-normal"></span>
+      </button>
+      <p class="text-center text-slate-600 text-xs mt-3">— または新しく始める —</p>
+    </div>
+
+    <div class="w-full max-w-sm space-y-3">
+      <div>
+        <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-widest">メールアドレス</label>
+        <input id="input-email" type="email" placeholder="hanako@kirari.jp"
+          class="w-full px-4 py-3 text-sm font-semibold"
+          oninput="onEmailInput()">
+        <p class="text-slate-600 text-xs mt-1.5">進捗を保存して、どのデバイスからでも続きから始められます</p>
+      </div>
+
+      <button id="btn-magic-link" onclick="sendMagicLink()"
+        class="w-full py-4 rounded-xl font-black text-base bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30 active:scale-95 transition-all flex items-center justify-center gap-2 opacity-50 pointer-events-none">
+        <i class="ri-mail-send-line"></i> マジックリンクを送る
+      </button>
+
+      <button onclick="skipToSetup()"
+        class="w-full py-3 rounded-xl font-semibold text-sm text-slate-500 active:scale-95 transition-all border border-slate-800">
+        メールなしでゲストプレイ
+      </button>
+    </div>
+
+    <p class="text-slate-700 text-xs mt-8 text-center">メールアドレスはSupabaseで安全に管理されます</p>
+  </div>
+</div>
+
+<!-- ========== SCREEN: メール確認 ========== -->
+<div id="screen-check-email" class="screen" style="background:#0f172a;">
+  <div class="min-h-dvh flex flex-col items-center justify-center px-6 py-12 text-center">
+
+    <div class="w-24 h-24 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/40 mb-6">
+      <i class="ri-mail-open-line text-white text-5xl"></i>
+    </div>
+
+    <h2 class="text-2xl font-black text-white mb-2">メールを確認してください</h2>
+    <p id="check-email-addr" class="text-indigo-400 text-sm font-bold mb-4"></p>
+    <p class="text-slate-400 text-sm leading-relaxed mb-8">
+      マジックリンクを送りました。<br>
+      メールのリンクをタップすると<br>
+      どのデバイスからでも進捗が引き継がれます。
+    </p>
+
+    <div class="w-full max-w-xs bg-slate-800 rounded-2xl p-4 mb-8 text-left space-y-2">
+      <div class="flex items-center gap-2 text-slate-400 text-xs">
+        <i class="ri-time-line text-indigo-400"></i>
+        <span>リンクは24時間有効です</span>
+      </div>
+      <div class="flex items-center gap-2 text-slate-400 text-xs">
+        <i class="ri-spam-2-line text-indigo-400"></i>
+        <span>届かない場合は迷惑メールフォルダを確認</span>
+      </div>
+    </div>
+
+    <button onclick="continueAfterEmail()"
+      class="w-full max-w-xs py-4 rounded-xl font-black bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
+      <i class="ri-play-fill"></i> 今すぐゲームを始める
+    </button>
+    <p class="text-slate-600 text-xs mt-3">メールを受け取ってから踏んでも引き継ぎできます</p>
+  </div>
+</div>
+
+<!-- ========== SCREEN: プロフィール設定（ウェルカム）========== -->
+<div id="screen-welcome" class="screen" style="background:#0f172a;">
+  <div class="min-h-dvh flex flex-col items-center justify-center px-6 py-12">
+
+    <div class="mb-6 text-center">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl shadow-indigo-500/30 mx-auto mb-3">
+        <i class="ri-user-add-line text-white text-3xl"></i>
+      </div>
+      <h2 class="text-2xl font-black text-white">プレイヤー登録</h2>
+      <p class="text-slate-500 text-sm mt-1">最初の1回だけ入力してください</p>
+    </div>
+
+    <div class="w-full max-w-sm space-y-3">
+      <div>
+        <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-widest">プレイヤー名</label>
+        <input id="input-name" type="text" placeholder="山田 花子"
+          class="w-full px-4 py-3 text-sm font-semibold">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-widest">所属ギルド（園）</label>
+        <select id="input-garden" class="w-full px-4 py-3 text-sm font-semibold">
+          <option value="">選択してください</option>
+          <option>きらり保育園大阪箕面</option>
+          <option>きらり保育園仙台六丁の目</option>
+          <option>きらり保育園多賀城</option>
+          <option>きらり保育園さぬま</option>
+          <option>きらり保育園かがの</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-widest">クエスト日</label>
+        <input id="input-date" type="date" class="w-full px-4 py-3 text-sm font-semibold">
+      </div>
+
+      <button onclick="goToCards()"
+        class="w-full mt-2 py-4 rounded-xl font-black text-base bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30 active:scale-95 transition-all flex items-center justify-center gap-2">
+        <i class="ri-play-fill"></i> ゲームスタート
+      </button>
+    </div>
+
+    <p class="text-slate-600 text-xs mt-8">5つのテーマをすべてクリアして<br>「きらりマスター」称号を目指せ！</p>
+  </div>
+</div>
+
+<!-- ========== SCREEN: カード一覧 ========== -->
+<div id="screen-cards" class="screen" style="background:#0f172a;">
+
+  <div class="status-bar px-4 py-3">
+    <div class="max-w-sm mx-auto">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <i class="ri-user-line text-white text-sm"></i>
+          </div>
+          <div>
+            <p id="header-name" class="text-white font-bold text-sm leading-none"></p>
+            <p id="header-garden" class="text-slate-500 text-xs"></p>
+          </div>
+        </div>
+        <div class="text-right">
+          <p id="xp-display" class="text-yellow-400 font-black text-sm">0 XP</p>
+          <p id="progress-text" class="text-slate-500 text-xs">0 / 5 クリア</p>
+        </div>
+      </div>
+      <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+        <div id="progress-bar" class="xp-fill h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- セーブ状態バッジ -->
+  <div id="save-status" class="hidden max-w-sm mx-auto px-4 pt-3">
+    <div class="flex items-center gap-2 text-xs text-emerald-400">
+      <i class="ri-cloud-line"></i>
+      <span id="save-status-text">進捗を保存中...</span>
+    </div>
+  </div>
+
+  <div class="max-w-sm mx-auto px-4 py-5">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="text-white font-black text-lg">クエスト選択</h2>
+        <p class="text-slate-500 text-xs">全テーマ制覇で称号獲得！</p>
+      </div>
+      <div id="title-badge" class="hidden lv-badge text-white"></div>
+    </div>
+
+    <div id="activity-feed" class="mb-4 space-y-1.5 hidden">
+      <p class="text-slate-600 text-xs font-bold uppercase tracking-widest mb-2">ライブ通知</p>
+    </div>
+
+    <div class="space-y-3" id="card-list"></div>
+  </div>
+</div>
+
+<!-- ========== SCREEN: ミッション ========== -->
+<div id="screen-form" class="screen" style="background:#0f172a;">
+  <div class="status-bar px-4 py-3">
+    <div class="max-w-sm mx-auto flex items-center gap-3">
+      <button onclick="navigate('cards')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 text-slate-400">
+        <i class="ri-arrow-left-s-line text-lg"></i>
+      </button>
+      <div class="flex-1">
+        <p id="form-theme-label" class="text-white font-black text-sm"></p>
+        <p class="text-slate-500 text-xs">ミッション進行中</p>
+      </div>
+      <div class="lv-badge text-white" id="form-xp-badge">+500 XP</div>
+    </div>
+  </div>
+
+  <div class="max-w-sm mx-auto px-4 pt-4">
+    <div id="mission-steps" class="flex gap-1.5 mb-5"></div>
+  </div>
+
+  <div class="max-w-sm mx-auto px-4 pb-12 space-y-3" id="mission-content"></div>
+</div>
+
+<!-- ========== SCREEN: カード解放 ========== -->
+<div id="screen-unlock" class="screen" style="background:#0f172a;">
+  <div class="min-h-dvh flex flex-col items-center justify-center px-6 text-center">
+    <div id="particles" class="fixed inset-0 pointer-events-none overflow-hidden"></div>
+
+    <div id="unlock-card" class="w-52 h-72 rounded-3xl flex flex-col items-center justify-center mb-6 shadow-2xl relative overflow-hidden">
+      <div class="kira absolute inset-0"></div>
+      <div class="absolute inset-0 opacity-20" style="background: radial-gradient(circle at 30% 30%, white, transparent)"></div>
+      <i id="unlock-icon" class="text-white text-7xl mb-3 relative z-10 drop-shadow-lg"></i>
+      <p id="unlock-title" class="text-white font-black text-xl leading-tight px-4 relative z-10"></p>
+      <div class="mt-3 bg-white/20 backdrop-blur rounded-full px-4 py-1.5 relative z-10 border border-white/30">
+        <p class="text-white text-xs font-black tracking-widest">CLEAR !</p>
+      </div>
+    </div>
+
+    <div class="mb-2">
+      <p class="text-yellow-400 font-black text-2xl mb-1" id="unlock-xp">+500 XP</p>
+      <p id="unlock-title-earned" class="text-indigo-400 text-sm font-bold"></p>
+    </div>
+    <p id="unlock-message" class="text-slate-400 text-sm mb-8"></p>
+
+    <button onclick="navigate('cards')"
+      class="w-full max-w-xs py-4 rounded-xl font-black bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg active:scale-95 transition-all">
+      次のクエストへ <i class="ri-arrow-right-line"></i>
+    </button>
+  </div>
+</div>
+
+<!-- ========== SCREEN: 全制覇 ========== -->
+<div id="screen-complete" class="screen" style="background:#0f172a;">
+  <div class="min-h-dvh flex flex-col items-center justify-center px-6 text-center">
+    <div class="text-7xl mb-4">🏆</div>
+    <div class="lv-badge text-white text-base px-4 py-2 mb-4">きらりマスター</div>
+    <h2 class="text-3xl font-black text-white mb-2">全テーマ制覇！</h2>
+    <p class="text-yellow-400 font-black text-xl mb-1" id="complete-xp"></p>
+    <p class="text-slate-400 text-sm mb-8">あなたの保育哲学が記録されました</p>
+    <div class="flex gap-2 flex-wrap justify-center mb-8" id="complete-cards"></div>
+    <div class="w-full max-w-xs space-y-3">
+      <button onclick="navigate('cards')"
+        class="w-full py-4 rounded-xl font-black bg-gradient-to-r from-yellow-500 to-amber-600 text-white shadow-lg active:scale-95 transition-all">
+        アーカイブを見る <i class="ri-trophy-line"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+</div><!-- #app -->
+
+<script>
+// ========== Supabase ==========
+const SUPABASE_URL  = 'https://gnerbodlppnufbtusknx.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImduZXJib2RscHBudWZidHVza254Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0ODUyNTAsImV4cCI6MjA5MDA2MTI1MH0.rYgwQjhlRgUMhUuvRe3GLuIngFg71eX8_sD63UIYMxg';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ========== テーマ定義 ==========
+const THEMES = [
+  {
+    id: 'vision', title: '保育観', sub: 'なぜやっているか',
+    icon: 'ri-heart-3-fill', gradient: 'from-rose-500 to-pink-600',
+    titleEarned: '保育哲学者',
+    missions: [
+      { label: 'MISSION 01 — 今の自分の課題', placeholder: '例：子どもへの声かけが単調になっている', id: 'q-concern' },
+      { label: 'MISSION 02 — 今日学びたいこと', placeholder: '例：子どもの気持ちの読み取り方', id: 'q-want' },
+      { label: 'MISSION 03 — 保育士として今一番意識していること', placeholder: '例：子ども一人ひとりの「今日」を大切にすること', id: 'q-v1' },
+      { label: 'MISSION 04 — あなたにとって顧客目線とは？', placeholder: '例：保護者が安心して預けられる環境をつくること', id: 'q-v2' },
+      { label: 'MISSION 05 — 今日一番耳に残ったこと', placeholder: '例：保育は子どもの今を支える仕事だということ', id: 'q-insight' },
+      { label: 'MISSION 06 — 明日から何を変える？（動詞で）', placeholder: '例：朝の受け入れ時に必ず目を見て名前を呼ぶ', id: 'q-action' },
+      { label: 'MISSION 07 — いつ・どの場面で？', placeholder: '例：毎朝8〜9時の受け入れの場面で', id: 'q-when' },
+    ]
+  },
+  {
+    id: 'customer', title: '顧客目線', sub: '保育・身だしなみ',
+    icon: 'ri-user-smile-fill', gradient: 'from-amber-400 to-orange-500',
+    titleEarned: '顧客感動師',
+    missions: [
+      { label: 'MISSION 01 — 今の自分の課題', placeholder: '例：保護者への報告が後回しになってしまう', id: 'q-concern' },
+      { label: 'MISSION 02 — 今日学びたいこと', placeholder: '例：保護者との信頼関係の作り方', id: 'q-want' },
+      { label: 'MISSION 03 — 今日の研修で顧客目線の意味が変わった？', placeholder: '例：保護者の不安を先読みすることが大事だと気づいた', id: 'q-c1' },
+      { label: 'MISSION 04 — 身だしなみで明日から変えること', placeholder: '例：エプロンをアイロンがけしてから来る', id: 'q-c2' },
+      { label: 'MISSION 05 — 今日一番耳に残ったこと', placeholder: '例：第一印象は3秒で決まるということ', id: 'q-insight' },
+      { label: 'MISSION 06 — 明日から何を変える？（動詞で）', placeholder: '例：登園時に笑顔で保護者の目を見て挨拶する', id: 'q-action' },
+      { label: 'MISSION 07 — いつ・どの場面で？', placeholder: '例：毎朝の登園受け入れの瞬間', id: 'q-when' },
+    ]
+  },
+  {
+    id: 'development', title: '正しい保育', sub: '発達に基づく保育',
+    icon: 'ri-seedling-fill', gradient: 'from-emerald-400 to-teal-600',
+    titleEarned: '発達の導師',
+    missions: [
+      { label: 'MISSION 01 — 今の自分の課題', placeholder: '例：発達段階を意識せず一律に関わってしまっている', id: 'q-concern' },
+      { label: 'MISSION 02 — 今日学びたいこと', placeholder: '例：0歳〜2歳の発達の違いと関わり方', id: 'q-want' },
+      { label: 'MISSION 03 — 担当の子どもについて発達視点で気づいたこと', placeholder: '例：〇〇ちゃんは今、自分でやりたい時期にいると感じた', id: 'q-d1' },
+      { label: 'MISSION 04 — 「待つ保育」についてあなたの考えは？', placeholder: '例：つい手を出してしまうが、子どもの力を信じて待つことが大事', id: 'q-d2' },
+      { label: 'MISSION 05 — 今日一番耳に残ったこと', placeholder: '例：子どもの「できた！」は待つことから生まれる', id: 'q-insight' },
+      { label: 'MISSION 06 — 明日から何を変える？（動詞で）', placeholder: '例：着替えの場面で手を出さず3秒待ってから声をかける', id: 'q-action' },
+      { label: 'MISSION 07 — いつ・どの場面で？', placeholder: '例：午前中の自由遊びと着替えの場面', id: 'q-when' },
+    ]
+  },
+  {
+    id: 'health', title: '自分の健康', sub: '体と心を整える',
+    icon: 'ri-mental-health-fill', gradient: 'from-sky-400 to-blue-600',
+    titleEarned: '心身の覚者',
+    missions: [
+      { label: 'MISSION 01 — 今の自分の課題', placeholder: '例：睡眠不足で集中力が続かない', id: 'q-concern' },
+      { label: 'MISSION 02 — 今日学びたいこと', placeholder: '例：仕事とプライベートのオンオフの切り替え方', id: 'q-want' },
+      { label: 'MISSION 03 — 今の心と体の状態を正直に教えて', placeholder: '例：体は元気だが、最近気持ちが重い日がある', id: 'q-h1' },
+      { label: 'MISSION 04 — 自分を整えるために今日から一つやること', placeholder: '例：毎朝10分早く起きてゆっくり朝食を食べる', id: 'q-h2' },
+      { label: 'MISSION 05 — 今日一番耳に残ったこと', placeholder: '例：自分を整えることが子どもへの最大のプレゼント', id: 'q-insight' },
+      { label: 'MISSION 06 — 明日から何を変える？（動詞で）', placeholder: '例：帰宅後すぐスマホを見ない・30分は休む', id: 'q-action' },
+      { label: 'MISSION 07 — いつ・どの場面で？', placeholder: '例：毎日帰宅直後の30分', id: 'q-when' },
+    ]
+  },
+  {
+    id: 'safety', title: '安心・安全', sub: 'トラブル対応',
+    icon: 'ri-shield-check-fill', gradient: 'from-violet-500 to-purple-600',
+    titleEarned: '安全の守護者',
+    missions: [
+      { label: 'MISSION 01 — 今の自分の課題', placeholder: '例：ヒヤリハットを見落としてしまうことがある', id: 'q-concern' },
+      { label: 'MISSION 02 — 今日学びたいこと', placeholder: '例：子ども同士のトラブル時の保護者対応', id: 'q-want' },
+      { label: 'MISSION 03 — ヒヤリハット体験と対応の振り返り', placeholder: '例：すぐに報告できなかった。次は迷わず主任に伝える', id: 'q-s1' },
+      { label: 'MISSION 04 — トラブル時、保護者にどう伝えるか？', placeholder: '例：事実を正確に・感情的にならず・双方の気持ちを伝える', id: 'q-s2' },
+      { label: 'MISSION 05 — 今日一番耳に残ったこと', placeholder: '例：「大丈夫です」は使わない。事実だけを伝える', id: 'q-insight' },
+      { label: 'MISSION 06 — 明日から何を変える？（動詞で）', placeholder: '例：ヒヤリハットは即日、主任に口頭で報告する', id: 'q-action' },
+      { label: 'MISSION 07 — いつ・どの場面で？', placeholder: '例：その日の保育が終わった退勤前に必ず', id: 'q-when' },
+    ]
+  },
+];
+
+// ========== 状態 ==========
+let state = {
+  email: '', name: '', garden: '', date: '',
+  done: {}, answers: {}, xp: 0,
+  currentTheme: null, currentMission: 0
+};
+let currentScreen = 'email';
+let supaSession   = null;
+const SCREEN_ORDER = ['email','check-email','welcome','cards','form','unlock','complete'];
+const LOCAL_KEY    = 'kirari-academy-v1';
+
+// ========== ナビゲーション ==========
+function navigate(to) {
+  if (currentScreen === to) return;
+  const fromEl = document.getElementById('screen-' + currentScreen);
+  const toEl   = document.getElementById('screen-' + to);
+  const goFwd  = SCREEN_ORDER.indexOf(to) >= SCREEN_ORDER.indexOf(currentScreen);
+
+  toEl.style.transition = 'none';
+  toEl.style.transform  = goFwd ? 'translateX(100%)' : 'translateX(-100%)';
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    toEl.style.transition = '';
+    toEl.style.transform  = '';
+    toEl.classList.add('active');
+    fromEl.style.transform = goFwd ? 'translateX(-100%)' : 'translateX(100%)';
+    fromEl.classList.remove('active');
+    setTimeout(() => {
+      fromEl.style.transition = 'none';
+      fromEl.style.transform  = 'translateX(100%)';
+      setTimeout(() => { fromEl.style.transition = ''; }, 50);
+    }, 380);
+    toEl.scrollTop = 0;
+    currentScreen = to;
+  }));
+}
+
+// ========== localStorage ==========
+function saveLocal() {
+  localStorage.setItem(LOCAL_KEY, JSON.stringify({
+    email: state.email, name: state.name, garden: state.garden,
+    done: state.done, xp: state.xp
+  }));
+}
+
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem(LOCAL_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+// ========== Supabase同期 ==========
+async function syncToSupabase() {
+  if (!supaSession) return;
+  const userId = supaSession.user.id;
+
+  // スタッフプロフィールをupsert
+  const { error } = await sb.from('academy_staff').upsert({
+    id: userId, name: state.name, garden: state.garden, xp: state.xp
+  }, { onConflict: 'id' });
+
+  if (!error) {
+    const el = document.getElementById('save-status');
+    const tx = document.getElementById('save-status-text');
+    if (el && tx) {
+      el.classList.remove('hidden');
+      tx.textContent = '☁ クラウドに保存済み';
+      setTimeout(() => el.classList.add('hidden'), 2000);
+    }
+  }
+}
+
+async function saveThemeToSupabase(themeId) {
+  if (!supaSession) return;
+  const userId = supaSession.user.id;
+  await sb.from('academy_progress').upsert({
+    staff_id: userId,
+    theme_id: themeId,
+    session_date: state.date || new Date().toISOString().split('T')[0],
+    answers: state.answers[themeId] || {},
+    xp_earned: 500
+  }, { onConflict: 'staff_id,theme_id,session_date' });
+}
+
+async function loadFromSupabase(userId) {
+  const { data: profile } = await sb.from('academy_staff').select('*').eq('id', userId).single();
+  if (!profile) return false;
+
+  const { data: progress } = await sb.from('academy_progress').select('*').eq('staff_id', userId);
+
+  state.name   = profile.name;
+  state.garden = profile.garden;
+  state.xp     = profile.xp;
+  state.done   = {};
+  if (progress) {
+    progress.forEach(p => { state.done[p.theme_id] = true; });
+  }
+  return true;
+}
+
+// ========== メール入力ハンドラ ==========
+function onEmailInput() {
+  const email = document.getElementById('input-email').value.trim();
+  const btn   = document.getElementById('btn-magic-link');
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if (valid) {
+    btn.classList.remove('opacity-50', 'pointer-events-none');
+  } else {
+    btn.classList.add('opacity-50', 'pointer-events-none');
+  }
+}
+
+async function sendMagicLink() {
+  const email = document.getElementById('input-email').value.trim();
+  if (!email) return;
+
+  state.email = email;
+
+  const redirectTo = window.location.href.split('?')[0].split('#')[0];
+
+  const { error } = await sb.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: redirectTo }
+  });
+
+  document.getElementById('check-email-addr').textContent = email;
+
+  if (error) {
+    // OTP送信失敗でもゲームは続行
+    showToast('メール送信に失敗しました（ゲストで続行）', 'ri-error-warning-line');
+    setTimeout(() => skipToSetup(), 1500);
+  } else {
+    navigate('check-email');
+  }
+}
+
+function continueAfterEmail() {
+  // メール確認画面から→プロフィール設定へ
+  const saved = loadLocal();
+  if (saved && saved.name) {
+    // 復元できる情報があればスキップ
+    Object.assign(state, saved);
+    renderCards();
+    navigate('cards');
+    setTimeout(() => showToast('おかえり、' + state.name + '！', 'ri-gamepad-line'), 400);
+  } else {
+    navigate('welcome');
+  }
+}
+
+function skipToSetup() {
+  const saved = loadLocal();
+  if (saved && saved.name) {
+    Object.assign(state, saved);
+    renderCards();
+    navigate('cards');
+    setTimeout(() => showToast('おかえり、' + state.name + '！続きからどうぞ', 'ri-gamepad-line'), 400);
+  } else {
+    navigate('welcome');
+  }
+}
+
+function resumeGame() {
+  const saved = loadLocal();
+  if (!saved) return;
+  Object.assign(state, saved);
+  if (saved.email) document.getElementById('input-email').value = saved.email;
+  renderCards();
+  navigate('cards');
+  setTimeout(() => showToast('おかえり！続きから始めます', 'ri-gamepad-line'), 400);
+}
+
+// ========== スタート ==========
+function goToCards() {
+  const name   = document.getElementById('input-name').value.trim();
+  const garden = document.getElementById('input-garden').value;
+  const date   = document.getElementById('input-date').value;
+  if (!name)   { alert('プレイヤー名を入力してください'); return; }
+  if (!garden) { alert('所属ギルドを選択してください'); return; }
+  if (!date)   { alert('クエスト日を選択してください'); return; }
+
+  state.name = name; state.garden = garden; state.date = date;
+  saveLocal();
+
+  if (supaSession) syncToSupabase();
+
+  renderCards();
+  navigate('cards');
+  setTimeout(() => showToast('ようこそ、' + name + '！', 'ri-gamepad-line'), 400);
+}
+
+// ========== カード描画 ==========
+function renderCards() {
+  document.getElementById('header-name').textContent   = state.name;
+  document.getElementById('header-garden').textContent = state.garden;
+  document.getElementById('xp-display').textContent    = state.xp.toLocaleString() + ' XP';
+
+  const done = Object.keys(state.done).length;
+  document.getElementById('progress-text').textContent = done + ' / ' + THEMES.length + ' クリア';
+  document.getElementById('progress-bar').style.width  = (done / THEMES.length * 100) + '%';
+
+  const badge = document.getElementById('title-badge');
+  if (done >= 3) { badge.textContent = done === 5 ? 'きらりマスター' : '修行中'; badge.classList.remove('hidden'); }
+
+  const list = document.getElementById('card-list');
+  list.innerHTML = '';
+  THEMES.forEach(theme => {
+    const isDone = !!state.done[theme.id];
+    const card = document.createElement('button');
+    card.onclick = () => openMission(theme.id);
+    card.className = [
+      'w-full text-left rounded-2xl p-4 flex items-center gap-4 transition-all active:scale-95',
+      isDone ? `bg-gradient-to-r ${theme.gradient} shadow-lg` : 'bg-slate-800 border border-slate-700',
+    ].join(' ');
+
+    card.innerHTML = `
+      <div class="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0
+        ${isDone ? 'bg-white/20' : 'bg-gradient-to-br ' + theme.gradient}">
+        <i class="${theme.icon} text-2xl text-white"></i>
+      </div>
+      <div class="flex-1">
+        <p class="font-black text-sm ${isDone ? 'text-white' : 'text-slate-200'}">${theme.title}</p>
+        <p class="text-xs ${isDone ? 'text-white/70' : 'text-slate-500'}">${theme.sub}</p>
+        ${isDone
+          ? `<p class="text-xs text-white/80 font-bold mt-0.5">「${theme.titleEarned}」称号獲得</p>`
+          : '<p class="text-xs text-slate-600 mt-0.5">7つのミッション</p>'
+        }
+      </div>
+      <div class="flex-shrink-0 flex flex-col items-center gap-1">
+        ${isDone
+          ? '<div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"><i class="ri-check-fill text-white text-lg"></i></div>'
+          : '<div class="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center"><i class="ri-lock-line text-slate-500"></i></div>'
+        }
+        <p class="text-xs font-black ${isDone ? 'text-white/70' : 'text-slate-600'}">+500XP</p>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+
+  // フェイクアクティビティ
+  const names = ['田中さん','佐藤さん','鈴木さん','高橋さん','渡辺さん'];
+  const feed = document.getElementById('activity-feed');
+  if (Object.keys(state.done).length > 0 && feed.classList.contains('hidden')) {
+    feed.classList.remove('hidden');
+    const theme = THEMES[Math.floor(Math.random() * THEMES.length)];
+    const name  = names[Math.floor(Math.random() * names.length)];
+    feed.innerHTML += `
+      <div class="flex items-center gap-2 bg-slate-800/50 rounded-lg px-3 py-2">
+        <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0"></div>
+        <p class="text-slate-400 text-xs"><span class="text-white font-bold">${name}</span>が「${theme.title}」をクリア！</p>
+      </div>
+    `;
+  }
+}
+
+// ========== トースト ==========
+function showToast(text, icon='ri-medal-line') {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = text;
+  document.getElementById('toast-icon').className = icon + ' text-yellow-300 text-lg';
+  t.classList.remove('hidden');
+  t.querySelector('div').style.animation = 'none';
+  requestAnimationFrame(() => {
+    t.querySelector('div').style.animation = '';
+    t.querySelector('div').classList.add('toast-in');
+  });
+  setTimeout(() => t.classList.add('hidden'), 3000);
+}
+
+// ========== XP追加 ==========
+function addXP(amount) {
+  state.xp += amount;
+  const popup = document.getElementById('xp-popup');
+  popup.textContent = '+' + amount + ' XP';
+  popup.classList.remove('hidden');
+  popup.style.animation = 'none';
+  requestAnimationFrame(() => {
+    popup.style.animation = '';
+    popup.classList.add('xp-popup');
+  });
+  setTimeout(() => popup.classList.add('hidden'), 1300);
+}
+
+// ========== パーティクル ==========
+function burst() {
+  const container = document.getElementById('particles');
+  container.innerHTML = '';
+  const colors = ['#f59e0b','#6366f1','#ec4899','#10b981','#f97316','#ffffff'];
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    const size  = Math.random() * 12 + 6;
+    const angle = Math.random() * 360;
+    const dist  = Math.random() * 200 + 80;
+    const dx = Math.cos(angle * Math.PI / 180) * dist + 'px';
+    const dy = (Math.sin(angle * Math.PI / 180) * dist - 100) + 'px';
+    p.style.cssText = `
+      position:absolute; width:${size}px; height:${size}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      border-radius:${Math.random()>0.5?'50%':'4px'};
+      top:40%; left:50%;
+      --dx:${dx}; --dy:${dy};
+    `;
+    p.classList.add('particle');
+    container.appendChild(p);
+  }
+  setTimeout(() => container.innerHTML = '', 900);
+}
+
+// ========== ミッション ==========
+function openMission(themeId) {
+  const theme = THEMES.find(t => t.id === themeId);
+  state.currentTheme   = themeId;
+  state.currentMission = 0;
+  if (!state.answers[themeId]) state.answers[themeId] = {};
+
+  document.getElementById('form-theme-label').textContent = theme.title + ' — ' + theme.sub;
+  renderMission();
+  navigate('form');
+}
+
+function renderMission() {
+  const theme = THEMES.find(t => t.id === state.currentTheme);
+  const total = theme.missions.length;
+  const idx   = state.currentMission;
+
+  const steps = document.getElementById('mission-steps');
+  steps.innerHTML = '';
+  theme.missions.forEach((_, i) => {
+    const s = document.createElement('div');
+    s.className = `h-1.5 flex-1 rounded-full transition-all duration-300 ${
+      i < idx ? 'bg-indigo-500' : i === idx ? 'bg-yellow-400' : 'bg-slate-700'
+    }`;
+    steps.appendChild(s);
+  });
+
+  const m = theme.missions[idx];
+  const saved = (state.answers[state.currentTheme] || {})[m.id] || '';
+  const content = document.getElementById('mission-content');
+  content.innerHTML = `
+    <div class="mission-box">
+      <div class="flex items-center justify-between mb-4">
+        <span class="text-indigo-400 text-xs font-black tracking-widest">${m.label.split('—')[0].trim()}</span>
+        <span class="text-slate-500 text-xs">${idx + 1} / ${total}</span>
+      </div>
+      <p class="text-white font-bold text-base mb-4 leading-snug">${m.label.split('—').slice(1).join('—').trim()}</p>
+      <textarea id="mission-input" rows="4" placeholder="${m.placeholder}"
+        class="w-full px-4 py-3 text-sm rounded-xl resize-none">${saved}</textarea>
+    </div>
+
+    <div class="flex gap-3">
+      ${idx > 0 ? `
+        <button onclick="prevMission()"
+          class="flex-1 py-4 rounded-xl font-black bg-slate-800 text-slate-300 active:scale-95 transition-all border border-slate-700">
+          <i class="ri-arrow-left-line"></i> 戻る
+        </button>
+      ` : ''}
+      <button onclick="nextMission()"
+        class="${idx > 0 ? 'flex-1' : 'w-full'} py-4 rounded-xl font-black
+          ${idx === total-1
+            ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-white shadow-lg shadow-amber-500/30'
+            : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30'}
+          active:scale-95 transition-all flex items-center justify-center gap-2">
+        ${idx === total-1
+          ? '<i class="ri-trophy-line"></i> クリア！'
+          : 'つぎへ <i class="ri-arrow-right-line"></i>'
+        }
+      </button>
+    </div>
+  `;
+
+  setTimeout(() => {
+    const el = document.getElementById('mission-input');
+    if (el) el.focus();
+  }, 400);
+}
+
+function nextMission() {
+  const input = document.getElementById('mission-input');
+  if (!input || !input.value.trim()) { alert('回答を入力してください'); return; }
+
+  // 回答を保存
+  const theme = THEMES.find(t => t.id === state.currentTheme);
+  const m = theme.missions[state.currentMission];
+  if (!state.answers[state.currentTheme]) state.answers[state.currentTheme] = {};
+  state.answers[state.currentTheme][m.id] = input.value.trim();
+
+  addXP(50);
+
+  if (state.currentMission < theme.missions.length - 1) {
+    state.currentMission++;
+    renderMission();
+    showToast('+50 XP 獲得！', 'ri-star-fill');
+  } else {
+    submitMission();
+  }
+}
+
+function prevMission() {
+  if (state.currentMission > 0) {
+    // 入力中の回答を保存してから戻る
+    const input = document.getElementById('mission-input');
+    if (input) {
+      const theme = THEMES.find(t => t.id === state.currentTheme);
+      const m = theme.missions[state.currentMission];
+      if (!state.answers[state.currentTheme]) state.answers[state.currentTheme] = {};
+      state.answers[state.currentTheme][m.id] = input.value.trim();
+    }
+    state.currentMission--;
+    renderMission();
+  }
+}
+
+async function submitMission() {
+  state.done[state.currentTheme] = true;
+  addXP(150);
+
+  // 保存
+  saveLocal();
+  await saveThemeToSupabase(state.currentTheme);
+  if (supaSession) await syncToSupabase();
+
+  const theme = THEMES.find(t => t.id === state.currentTheme);
+  const card = document.getElementById('unlock-card');
+  card.className = `w-52 h-72 rounded-3xl flex flex-col items-center justify-center mb-6 shadow-2xl relative overflow-hidden card-pop bg-gradient-to-br ${theme.gradient}`;
+  document.getElementById('unlock-icon').className  = theme.icon + ' text-white text-7xl mb-3 relative z-10 drop-shadow-lg';
+  document.getElementById('unlock-title').textContent = theme.title;
+  document.getElementById('unlock-title-earned').textContent = '「' + theme.titleEarned + '」称号獲得！';
+  document.getElementById('unlock-xp').textContent = '+500 XP TOTAL';
+
+  const done = Object.keys(state.done).length;
+  document.getElementById('unlock-message').textContent =
+    done === THEMES.length ? '🏆 全テーマ制覇！きらりマスター誕生！' : `残り ${THEMES.length - done} テーマでマスター！`;
+
+  navigate('unlock');
+  setTimeout(() => burst(), 300);
+
+  if (done === THEMES.length) {
+    setTimeout(() => { renderComplete(); navigate('complete'); }, 2500);
+  }
+}
+
+function renderComplete() {
+  document.getElementById('complete-xp').textContent = '総獲得 ' + state.xp.toLocaleString() + ' XP';
+  const c = document.getElementById('complete-cards');
+  c.innerHTML = '';
+  THEMES.forEach(theme => {
+    c.innerHTML += `
+      <div class="w-16 h-20 rounded-xl bg-gradient-to-br ${theme.gradient} flex flex-col items-center justify-center shadow-lg">
+        <i class="${theme.icon} text-white text-2xl mb-1"></i>
+        <p class="text-white text-xs font-black leading-tight text-center px-1">${theme.title}</p>
+      </div>
+    `;
+  });
+}
+
+// ========== 起動時処理 ==========
+async function init() {
+  document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
+
+  // 1. Supabaseセッション確認（magic link踏んだ後）
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    supaSession = session;
+    const restored = await loadFromSupabase(session.user.id);
+    if (restored && state.name) {
+      renderCards();
+      navigate('cards');
+      setTimeout(() => showToast('おかえり、' + state.name + '！', 'ri-gamepad-line'), 400);
+      return;
+    }
+  }
+
+  // 2. localStorageから復元
+  const saved = loadLocal();
+  if (saved && saved.name) {
+    const banner = document.getElementById('resume-banner');
+    const info   = document.getElementById('resume-info');
+    banner.classList.remove('hidden');
+    const done = Object.keys(saved.done || {}).length;
+    info.textContent = `（${saved.name} · ${done}/5 クリア）`;
+
+    if (saved.email) {
+      document.getElementById('input-email').value = saved.email;
+      onEmailInput();
+    }
+  }
+
+  // Supabase auth状態変更を監視（magic linkでタブが開かれたとき）
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      supaSession = session;
+      // localのstateをSupabaseにアップロード
+      if (state.name) await syncToSupabase();
+      showToast('メール認証完了！進捗をクラウドに保存しました', 'ri-cloud-line');
+    }
+  });
+}
+
+init();
+</script>
+</body>
+</html>
