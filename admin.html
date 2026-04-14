@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>きらりアカデミー 管理画面</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <style>
+    body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; background: #0f172a; color: #f8fafc; }
+    .card { background: #1e293b; border-radius: 16px; }
+    th { color: #94a3b8; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 12px; text-align: left; border-bottom: 1px solid #334155; }
+    td { padding: 12px; border-bottom: 1px solid #1e293b; font-size: 13px; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #1e293b; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .conf-star { color: #f59e0b; }
+    .conf-empty { color: #334155; }
+    select, input { background: #1e293b; color: #f1f5f9; border: 1px solid #334155; border-radius: 8px; padding: 6px 10px; font-size: 13px; }
+    .theme-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+    .answer-text { color: #94a3b8; font-size: 12px; line-height: 1.5; max-width: 280px; }
+    .score-bar { height: 4px; border-radius: 2px; background: #334155; }
+    .score-fill { height: 4px; border-radius: 2px; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+<!-- ヘッダー -->
+<div class="border-b border-slate-800 px-6 py-4">
+  <div class="max-w-7xl mx-auto flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+        <i class="ri-sword-line text-white text-lg"></i>
+      </div>
+      <div>
+        <h1 class="text-white font-black text-lg leading-none">KIRARI ACADEMY</h1>
+        <p class="text-slate-500 text-xs">管理ダッシュボード</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3" id="auth-area">
+      <span class="text-slate-500 text-sm">読み込み中...</span>
+    </div>
+  </div>
+</div>
+
+<!-- 認証ゲート -->
+<div id="login-screen" class="hidden min-h-screen flex items-center justify-center px-6">
+  <div class="card p-8 w-full max-w-sm text-center">
+    <i class="ri-lock-2-line text-indigo-400 text-4xl mb-4 block"></i>
+    <h2 class="text-white font-black text-xl mb-2">管理者ログイン</h2>
+    <p class="text-slate-500 text-sm mb-6">メールアドレスでマジックリンクを送ります</p>
+    <input id="admin-email" type="email" placeholder="admin@kirari.jp" class="w-full mb-3 text-center">
+    <button onclick="adminLogin()"
+      class="w-full py-3 rounded-xl font-black bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm active:scale-95 transition-all">
+      マジックリンクを送る
+    </button>
+    <p id="login-msg" class="text-slate-500 text-xs mt-3 hidden"></p>
+  </div>
+</div>
+
+<!-- メインコンテンツ -->
+<div id="main" class="hidden max-w-7xl mx-auto px-4 py-6">
+
+  <!-- サマリーカード -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="summary-cards">
+    <div class="card p-4">
+      <p class="text-slate-500 text-xs font-bold mb-1">参加スタッフ</p>
+      <p class="text-white text-2xl font-black" id="s-staff">—</p>
+    </div>
+    <div class="card p-4">
+      <p class="text-slate-500 text-xs font-bold mb-1">クリア済テーマ</p>
+      <p class="text-white text-2xl font-black" id="s-themes">—</p>
+    </div>
+    <div class="card p-4">
+      <p class="text-slate-500 text-xs font-bold mb-1">平均自信度</p>
+      <p class="text-white text-2xl font-black" id="s-conf">—</p>
+      <p class="text-slate-600 text-xs">/ 5.0</p>
+    </div>
+    <div class="card p-4">
+      <p class="text-slate-500 text-xs font-bold mb-1">課題認識変化率</p>
+      <p class="text-white text-2xl font-black" id="s-changed">—</p>
+      <p class="text-slate-600 text-xs">yes + partial</p>
+    </div>
+  </div>
+
+  <!-- フィルター -->
+  <div class="flex flex-wrap gap-3 mb-5">
+    <select id="filter-garden" onchange="applyFilter()">
+      <option value="">全ての園</option>
+      <option>きらり保育園大阪箕面</option>
+      <option>きらり保育園仙台六丁の目</option>
+      <option>きらり保育園多賀城</option>
+      <option>きらり保育園さぬま</option>
+      <option>きらり保育園かがの</option>
+    </select>
+    <select id="filter-theme" onchange="applyFilter()">
+      <option value="">全テーマ</option>
+      <option value="vision">保育観</option>
+      <option value="customer">顧客目線</option>
+      <option value="development">正しい保育</option>
+      <option value="health">自分の健康</option>
+      <option value="safety">安心・安全</option>
+    </select>
+    <input id="filter-session" type="text" placeholder="セッションコード" oninput="applyFilter()" style="width:180px">
+    <input id="filter-name" type="text" placeholder="スタッフ名で検索" oninput="applyFilter()" style="width:160px">
+    <button onclick="exportCSV()" class="ml-auto px-4 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/30 hover:bg-emerald-500/30 transition-all">
+      <i class="ri-download-line"></i> CSV出力
+    </button>
+  </div>
+
+  <!-- スタッフ別サマリー -->
+  <div class="card mb-6 overflow-hidden">
+    <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
+      <h2 class="text-white font-black text-sm">スタッフ別達成状況</h2>
+      <span class="text-slate-500 text-xs" id="staff-count">0名</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full" id="staff-table">
+        <thead>
+          <tr>
+            <th>スタッフ名</th>
+            <th>園</th>
+            <th>クリア</th>
+            <th>総XP</th>
+            <th>自信度</th>
+            <th>課題変化</th>
+            <th>登録日</th>
+          </tr>
+        </thead>
+        <tbody id="staff-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 回答詳細 -->
+  <div class="card overflow-hidden">
+    <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
+      <h2 class="text-white font-black text-sm">回答詳細（テーマ × スタッフ）</h2>
+      <span class="text-slate-500 text-xs" id="response-count">0件</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full" id="response-table">
+        <thead>
+          <tr>
+            <th>スタッフ</th>
+            <th>園</th>
+            <th>テーマ</th>
+            <th>日付</th>
+            <th>行動宣言</th>
+            <th>いつ・場面</th>
+            <th>自信度</th>
+            <th>課題変化</th>
+            <th>変化の理由</th>
+            <th>コード</th>
+          </tr>
+        </thead>
+        <tbody id="response-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SUPABASE_URL  = 'https://gnerbodlppnufbtusknx.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImduZXJib2RscHBudWZidHVza254Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0ODUyNTAsImV4cCI6MjA5MDA2MTI1MH0.rYgwQjhlRgUMhUuvRe3GLuIngFg71eX8_sD63UIYMxg';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+const THEME_MAP = {
+  vision: { label: '保育観', color: 'rose', icon: 'ri-heart-3-fill' },
+  customer: { label: '顧客目線', color: 'amber', icon: 'ri-user-smile-fill' },
+  development: { label: '正しい保育', color: 'emerald', icon: 'ri-seedling-fill' },
+  health: { label: '自分の健康', color: 'sky', icon: 'ri-mental-health-fill' },
+  safety: { label: '安心・安全', color: 'violet', icon: 'ri-shield-check-fill' },
+};
+
+let allStaff     = [];
+let allProgress  = [];
+
+async function adminLogin() {
+  const email = document.getElementById('admin-email').value.trim();
+  if (!email) return;
+  const { error } = await sb.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.href }
+  });
+  const msg = document.getElementById('login-msg');
+  msg.classList.remove('hidden');
+  msg.textContent = error ? 'エラーが発生しました: ' + error.message : `${email} にリンクを送りました`;
+}
+
+async function loadData() {
+  // スタッフ一覧
+  const { data: staff } = await sb.from('academy_staff').select('*').order('created_at', { ascending: false });
+  allStaff = staff || [];
+
+  // 進捗一覧（スタッフ情報結合）
+  const { data: progress } = await sb.from('academy_progress')
+    .select('*, academy_staff(name, garden)')
+    .order('cleared_at', { ascending: false });
+  allProgress = progress || [];
+
+  updateSummary();
+  applyFilter();
+}
+
+function updateSummary() {
+  document.getElementById('s-staff').textContent   = allStaff.length;
+  document.getElementById('s-themes').textContent  = allProgress.length;
+
+  const confs = allProgress.filter(p => p.action_confidence).map(p => p.action_confidence);
+  document.getElementById('s-conf').textContent =
+    confs.length ? (confs.reduce((a,b)=>a+b,0) / confs.length).toFixed(1) : '—';
+
+  const changed = allProgress.filter(p => p.pre_changed === 'yes' || p.pre_changed === 'partial').length;
+  const total   = allProgress.filter(p => p.pre_changed).length;
+  document.getElementById('s-changed').textContent = total ? Math.round(changed/total*100) + '%' : '—';
+}
+
+function applyFilter() {
+  const garden  = document.getElementById('filter-garden').value;
+  const theme   = document.getElementById('filter-theme').value;
+  const session = document.getElementById('filter-session').value.trim().toUpperCase();
+  const name    = document.getElementById('filter-name').value.trim();
+
+  // スタッフサマリーフィルター
+  const filteredStaff = allStaff.filter(s =>
+    (!garden || s.garden === garden) &&
+    (!name   || s.name.includes(name))
+  );
+  renderStaffTable(filteredStaff);
+
+  // 回答詳細フィルター
+  const filteredProgress = allProgress.filter(p => {
+    const sName   = p.academy_staff?.name || '';
+    const sGarden = p.academy_staff?.garden || '';
+    return (!garden  || sGarden === garden) &&
+           (!theme   || p.theme_id === theme) &&
+           (!session || (p.session_code || '').includes(session)) &&
+           (!name    || sName.includes(name));
+  });
+  renderResponseTable(filteredProgress);
+}
+
+function renderStaffTable(staff) {
+  document.getElementById('staff-count').textContent = staff.length + '名';
+  const tbody = document.getElementById('staff-tbody');
+  tbody.innerHTML = '';
+
+  if (!staff.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-slate-600 py-8">データがありません</td></tr>';
+    return;
+  }
+
+  staff.forEach(s => {
+    const prog    = allProgress.filter(p => p.staff_id === s.id);
+    const confs   = prog.filter(p => p.action_confidence).map(p => p.action_confidence);
+    const avgConf = confs.length ? (confs.reduce((a,b)=>a+b,0)/confs.length).toFixed(1) : null;
+    const changed = prog.filter(p => p.pre_changed === 'yes' || p.pre_changed === 'partial').length;
+    const total   = prog.filter(p => p.pre_changed).length;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="text-white font-bold">${s.name}</td>
+      <td><span class="text-slate-400">${s.garden?.replace('きらり保育園','') || '—'}</span></td>
+      <td>
+        <span class="font-black ${prog.length === 5 ? 'text-yellow-400' : 'text-white'}">${prog.length}</span>
+        <span class="text-slate-600"> / 5</span>
+        ${prog.length === 5 ? '<span class="badge bg-yellow-500/20 text-yellow-400 ml-1">MASTER</span>' : ''}
+      </td>
+      <td class="text-yellow-400 font-bold">${s.xp.toLocaleString()}</td>
+      <td>${avgConf ? `<span class="font-bold">${avgConf}</span><span class="conf-star text-xs ml-1">${'★'.repeat(Math.round(avgConf))}</span>` : '<span class="text-slate-600">—</span>'}</td>
+      <td>${total ? `<span class="font-bold ${changed/total >= 0.5 ? 'text-emerald-400' : 'text-slate-400'}">${Math.round(changed/total*100)}%</span>` : '<span class="text-slate-600">—</span>'}</td>
+      <td class="text-slate-500 text-xs">${new Date(s.created_at).toLocaleDateString('ja')}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderResponseTable(progress) {
+  document.getElementById('response-count').textContent = progress.length + '件';
+  const tbody = document.getElementById('response-tbody');
+  tbody.innerHTML = '';
+
+  if (!progress.length) {
+    tbody.innerHTML = '<tr><td colspan="10" class="text-center text-slate-600 py-8">回答がありません</td></tr>';
+    return;
+  }
+
+  progress.forEach(p => {
+    const tm      = THEME_MAP[p.theme_id] || { label: p.theme_id, color: 'slate', icon: '' };
+    const answers = p.answers || {};
+    const conf    = p.action_confidence;
+    const pch     = p.pre_changed;
+
+    const pchBadge = {
+      yes:     '<span class="badge bg-emerald-500/20 text-emerald-400">変わった</span>',
+      partial: '<span class="badge bg-amber-500/20 text-amber-400">一部変化</span>',
+      no:      '<span class="badge bg-slate-700 text-slate-400">変わらず</span>',
+    }[pch] || '<span class="text-slate-600">—</span>';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="text-white font-bold whitespace-nowrap">${p.academy_staff?.name || '—'}</td>
+      <td class="text-slate-400 text-xs whitespace-nowrap">${(p.academy_staff?.garden || '').replace('きらり保育園','')}</td>
+      <td><span class="theme-tag bg-${tm.color}-500/20 text-${tm.color}-400"><i class="${tm.icon}"></i>${tm.label}</span></td>
+      <td class="text-slate-500 text-xs whitespace-nowrap">${p.session_date}</td>
+      <td class="answer-text">${answers['q-action'] || '<span class="text-slate-700">未回答</span>'}</td>
+      <td class="answer-text">${answers['q-when']   || '<span class="text-slate-700">未回答</span>'}</td>
+      <td class="whitespace-nowrap">
+        ${conf
+          ? `<span class="font-bold text-white">${conf}</span><span class="conf-star text-xs ml-0.5">${'★'.repeat(conf)}${'☆'.repeat(5-conf)}</span>`
+          : '<span class="text-slate-600">—</span>'
+        }
+      </td>
+      <td>${pchBadge}</td>
+      <td class="answer-text">${p.pre_changed_reason || '<span class="text-slate-700">—</span>'}</td>
+      <td class="text-slate-600 text-xs whitespace-nowrap">${p.session_code || '—'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function exportCSV() {
+  const progress = allProgress;
+  if (!progress.length) { alert('データがありません'); return; }
+
+  const header = ['スタッフ名','園','テーマ','日付','セッションコード','自信度','課題変化','変化の理由','行動宣言','いつ・場面','気づき'];
+  const rows = progress.map(p => {
+    const a = p.answers || {};
+    return [
+      p.academy_staff?.name || '',
+      p.academy_staff?.garden || '',
+      THEME_MAP[p.theme_id]?.label || p.theme_id,
+      p.session_date,
+      p.session_code || '',
+      p.action_confidence || '',
+      p.pre_changed || '',
+      p.pre_changed_reason || '',
+      a['q-action'] || '',
+      a['q-when'] || '',
+      a['q-insight'] || '',
+    ].map(v => `"${String(v).replace(/"/g,'""')}"`);
+  });
+
+  const csv = '\uFEFF' + [header, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = `kirari-academy-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+
+  if (session) {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('main').classList.remove('hidden');
+    document.getElementById('auth-area').innerHTML = `
+      <span class="text-slate-400 text-sm">${session.user.email}</span>
+      <button onclick="sb.auth.signOut().then(()=>location.reload())" class="text-xs text-slate-600 hover:text-slate-400">ログアウト</button>
+    `;
+    await loadData();
+  } else {
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('auth-area').innerHTML = '';
+  }
+
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN') location.reload();
+  });
+}
+
+init();
+</script>
+</body>
+</html>
