@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>きらりアカデミー 操作説明</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; background: #f8fafc; }
+    .card { background: white; border-radius: 20px; padding: 24px; box-shadow: 0 2px 16px rgba(0,0,0,0.06); }
+    .step-num {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white; font-weight: 900; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .intent-box {
+      background: #f0f9ff;
+      border-left: 4px solid #6366f1;
+      border-radius: 0 12px 12px 0;
+      padding: 12px 16px;
+    }
+    .tag {
+      display: inline-block;
+      background: #ede9fe; color: #6d28d9;
+      font-size: 11px; font-weight: 700;
+      padding: 2px 10px; border-radius: 20px;
+    }
+  </style>
+</head>
+<body class="min-h-screen px-4 py-10 max-w-2xl mx-auto">
+
+  <!-- ヘッダー -->
+  <div class="text-center mb-10">
+    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-200">
+      <i class="ri-sword-line text-white text-3xl"></i>
+    </div>
+    <h1 class="text-2xl font-black text-slate-900">KIRARI ACADEMY</h1>
+    <p class="text-slate-500 text-sm mt-1">操作説明 & 設計の狙い</p>
+    <div class="mt-3 flex justify-center gap-2">
+      <span class="tag">遠藤さん確認用</span>
+      <span class="tag">スタッフ配布用</span>
+    </div>
+  </div>
+
+  <!-- 設計の大前提 -->
+  <div class="card mb-6">
+    <h2 class="font-black text-slate-900 text-lg mb-3 flex items-center gap-2">
+      <i class="ri-lightbulb-flash-fill text-yellow-500"></i> なぜ「ゲーム」なのか
+    </h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+      アンケートと呼ぶと「義務感」が生まれる。ゲームと感じると「達成欲」が生まれる。<br>
+      同じ質問でも、受け取り方が変わると回答の質が変わる。
+    </p>
+    <div class="space-y-2">
+      <div class="intent-box">
+        <p class="text-xs font-bold text-indigo-700 mb-0.5">実装意図理論（行動心理学）</p>
+        <p class="text-slate-600 text-xs">「いつ・どの場面で」まで書かせた人だけが行動する。漠然とした「頑張ります」は意図ではない。</p>
+      </div>
+      <div class="intent-box">
+        <p class="text-xs font-bold text-indigo-700 mb-0.5">コミットメント効果</p>
+        <p class="text-slate-600 text-xs">研修前に「自分の課題」を書かせることで、講師の話が「自分ごと」になる確率が上がる。</p>
+      </div>
+      <div class="intent-box">
+        <p class="text-xs font-bold text-indigo-700 mb-0.5">完了欲求（ゼイガルニク効果）</p>
+        <p class="text-slate-600 text-xs">未完了のカードが気になる。「残り2テーマ」と見えると続けたくなる心理を利用。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 操作フロー -->
+  <div class="card mb-6">
+    <h2 class="font-black text-slate-900 text-lg mb-5 flex items-center gap-2">
+      <i class="ri-map-pin-2-fill text-indigo-500"></i> 操作の流れ
+    </h2>
+    <div class="space-y-5">
+
+      <div class="flex gap-3">
+        <div class="step-num">1</div>
+        <div class="flex-1">
+          <p class="font-bold text-slate-900 text-sm">メールアドレスを入力</p>
+          <p class="text-slate-500 text-xs mt-1">進捗を保存するために使います。同じメールで別のデバイスからアクセスしても続きから始められます。</p>
+          <p class="text-indigo-500 text-xs font-bold mt-1.5">→「マジックリンクを送る」を押すとメールが届きます</p>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <div class="step-num">2</div>
+        <div class="flex-1">
+          <p class="font-bold text-slate-900 text-sm">プレイヤー登録（最初の1回だけ）</p>
+          <p class="text-slate-500 text-xs mt-1">氏名・所属園・研修日を入力。次回からは自動で復元されます。</p>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <div class="step-num">3</div>
+        <div class="flex-1">
+          <p class="font-bold text-slate-900 text-sm">クエスト（テーマ）を選ぶ</p>
+          <p class="text-slate-500 text-xs mt-1">5つのテーマが並んでいます。どれから始めてもOK。クリア済みはカードが輝きます。</p>
+          <div class="mt-2 grid grid-cols-2 gap-1.5 text-xs">
+            <div class="bg-rose-50 text-rose-700 rounded-lg px-3 py-1.5 font-bold flex items-center gap-1"><i class="ri-heart-3-fill"></i> 保育観</div>
+            <div class="bg-amber-50 text-amber-700 rounded-lg px-3 py-1.5 font-bold flex items-center gap-1"><i class="ri-user-smile-fill"></i> 顧客目線</div>
+            <div class="bg-emerald-50 text-emerald-700 rounded-lg px-3 py-1.5 font-bold flex items-center gap-1"><i class="ri-seedling-fill"></i> 正しい保育</div>
+            <div class="bg-sky-50 text-sky-700 rounded-lg px-3 py-1.5 font-bold flex items-center gap-1"><i class="ri-mental-health-fill"></i> 自分の健康</div>
+            <div class="bg-violet-50 text-violet-700 rounded-lg px-3 py-1.5 font-bold flex items-center gap-1 col-span-2 w-fit"><i class="ri-shield-check-fill"></i> 安心・安全</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <div class="step-num">4</div>
+        <div class="flex-1">
+          <p class="font-bold text-slate-900 text-sm">7つのミッションに回答</p>
+          <p class="text-slate-500 text-xs mt-1">1問ずつ画面を送りながら答えます。「つぎへ」で進み、「戻る」で前の回答を修正できます。回答するたびに+50 XP。</p>
+          <p class="text-indigo-500 text-xs font-bold mt-1.5">→ 最後の「クリア！」で500 XP獲得＆カード解放</p>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <div class="step-num">5</div>
+        <div class="flex-1">
+          <p class="font-bold text-slate-900 text-sm">5テーマ全制覇で「きらりマスター」</p>
+          <p class="text-slate-500 text-xs mt-1">全テーマクリアでトロフィー画面が出現。称号と全カードが表示されます。</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 5テーマの設計意図 -->
+  <div class="card mb-6">
+    <h2 class="font-black text-slate-900 text-lg mb-5 flex items-center gap-2">
+      <i class="ri-database-2-fill text-indigo-500"></i> 5テーマ × 7ミッションの設計意図
+    </h2>
+    <div class="space-y-4">
+
+      <div class="border border-slate-100 rounded-xl p-4">
+        <div class="flex items-center gap-2 mb-2">
+          <i class="ri-heart-3-fill text-rose-500"></i>
+          <span class="font-black text-slate-900 text-sm">保育観</span>
+          <span class="text-slate-400 text-xs">/ なぜやっているか</span>
+        </div>
+        <p class="text-slate-500 text-xs">「なぜ保育士なのか」を毎回言語化させる。哲学がブレない保育士を育てる。研修前後で「課題認識がどう変わったか」を記録。</p>
+      </div>
+
+      <div class="border border-slate-100 rounded-xl p-4">
+        <div class="flex items-center gap-2 mb-2">
+          <i class="ri-user-smile-fill text-amber-500"></i>
+          <span class="font-black text-slate-900 text-sm">顧客目線</span>
+          <span class="text-slate-400 text-xs">/ 保育・身だしなみ</span>
+        </div>
+        <p class="text-slate-500 text-xs">保護者・子どもを「顧客」として意識させる。身だしなみ・第一印象・報告のタイミング。明日から具体的に何を変えるかをセット。</p>
+      </div>
+
+      <div class="border border-slate-100 rounded-xl p-4">
+        <div class="flex items-center gap-2 mb-2">
+          <i class="ri-seedling-fill text-emerald-500"></i>
+          <span class="font-black text-slate-900 text-sm">正しい保育</span>
+          <span class="text-slate-400 text-xs">/ 発達に基づく保育</span>
+        </div>
+        <p class="text-slate-500 text-xs">担当の子どもへの「気づき」を言語化させる。「待つ保育」の自分なりの解釈を書かせることで、知識を行動に変換する。</p>
+      </div>
+
+      <div class="border border-slate-100 rounded-xl p-4">
+        <div class="flex items-center gap-2 mb-2">
+          <i class="ri-mental-health-fill text-sky-500"></i>
+          <span class="font-black text-slate-900 text-sm">自分の健康</span>
+          <span class="text-slate-400 text-xs">/ 体と心を整える</span>
+        </div>
+        <p class="text-slate-500 text-xs">「今の体と心の状態」を正直に書かせる。離職の前段は必ずここにある。早期発見の場としても機能。自己ケアの行動宣言を引き出す。</p>
+      </div>
+
+      <div class="border border-slate-100 rounded-xl p-4">
+        <div class="flex items-center gap-2 mb-2">
+          <i class="ri-shield-check-fill text-violet-500"></i>
+          <span class="font-black text-slate-900 text-sm">安心・安全</span>
+          <span class="text-slate-400 text-xs">/ トラブル対応</span>
+        </div>
+        <p class="text-slate-500 text-xs">ヒヤリハットの体験を自主的に書かせる場を作る。「気づいたが言えなかった」を「書く文化」に変える。保護者対応の言語化訓練。</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- データの使い道 -->
+  <div class="card mb-6">
+    <h2 class="font-black text-slate-900 text-lg mb-4 flex items-center gap-2">
+      <i class="ri-bar-chart-box-fill text-indigo-500"></i> 取れるデータと使い道
+    </h2>
+    <div class="space-y-3">
+      <div class="flex gap-3 items-start">
+        <i class="ri-robot-fill text-indigo-400 mt-0.5 text-sm flex-shrink-0"></i>
+        <div>
+          <p class="text-sm font-bold text-slate-900">行動宣言の具体性をAIで採点</p>
+          <p class="text-xs text-slate-500">「頑張ります」0点 → 「8時の受け入れ時に〇〇ちゃんに声をかける前に…」100点。スコアが低いスタッフへ追加フォロー。</p>
+        </div>
+      </div>
+      <div class="flex gap-3 items-start">
+        <i class="ri-line-chart-fill text-emerald-500 mt-0.5 text-sm flex-shrink-0"></i>
+        <div>
+          <p class="text-sm font-bold text-slate-900">1週間後フォローアップで行動変容を追跡</p>
+          <p class="text-xs text-slate-500">宣言した行動が実行されたか。達成率がデータになる。「できなかった理由」も記録し次の研修設計に活かす。</p>
+        </div>
+      </div>
+      <div class="flex gap-3 items-start">
+        <i class="ri-book-open-fill text-amber-500 mt-0.5 text-sm flex-shrink-0"></i>
+        <div>
+          <p class="text-sm font-bold text-slate-900">全スタッフの気づきをナレッジDBに蓄積</p>
+          <p class="text-xs text-slate-500">「耳に残ったこと」「明日からやること」を全員分収集。AIがタグ付け→次の研修素材が自動生成される設計。</p>
+        </div>
+      </div>
+      <div class="flex gap-3 items-start">
+        <i class="ri-heart-pulse-fill text-rose-500 mt-0.5 text-sm flex-shrink-0"></i>
+        <div>
+          <p class="text-sm font-bold text-slate-900">「自分の健康」回答で離職リスク早期検知</p>
+          <p class="text-xs text-slate-500">定期的に「心が重い」と答えているスタッフは離職リスクが高い。管理者が個別にフォローできる。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- マジックリンクの説明 -->
+  <div class="card mb-6">
+    <h2 class="font-black text-slate-900 text-lg mb-4 flex items-center gap-2">
+      <i class="ri-mail-send-fill text-indigo-500"></i> マジックリンクとは
+    </h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+      パスワード不要のログイン方法です。メールアドレスを入力するとリンクが届き、タップするだけでどのデバイスからでも自分の進捗が引き継がれます。
+    </p>
+    <div class="bg-slate-50 rounded-xl p-4 text-xs text-slate-500 space-y-1.5">
+      <p>📱 自宅のスマホ → 研修室のiPad → 職場のPCでも同じ進捗</p>
+      <p>🔒 パスワードを覚える必要なし</p>
+      <p>⏱ リンクは24時間有効。研修中にメールを開かなくても後から踏んでOK</p>
+      <p>📵 メールなしでもゲストとして遊べます（端末が変わると進捗はリセット）</p>
+    </div>
+  </div>
+
+  <!-- フッター -->
+  <div class="text-center text-slate-400 text-xs mt-10 pb-6">
+    <p>きらりアカデミー v1.0 — 株式会社お星さま</p>
+    <p class="mt-1">
+      <a href="https://academy.kirari-hoiku.com" class="text-indigo-500 font-bold">academy.kirari-hoiku.com</a>
+    </p>
+  </div>
+
+</body>
+</html>
