@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>きらりアカデミー の使い方</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans JP', 'Hiragino Sans', sans-serif; background: #0f172a; color: #f8fafc; }
+    .card { background: #1e293b; border-radius: 20px; padding: 24px; }
+    .step-num {
+      width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white; font-weight: 900; font-size: 15px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .theme-card {
+      border-radius: 14px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+  </style>
+</head>
+<body class="min-h-screen px-4 py-10 max-w-lg mx-auto">
+
+  <!-- ヘッダー -->
+  <div class="text-center mb-8">
+    <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-indigo-500/40">
+      <i class="ri-sword-line text-white text-4xl"></i>
+    </div>
+    <h1 class="text-2xl font-black text-white">KIRARI ACADEMY</h1>
+    <p class="text-indigo-400 text-sm mt-1">きらり保育士 育成システム</p>
+    <p class="text-slate-500 text-xs mt-3">研修のたびに5つのクエストに挑戦して<br>「きらりマスター」を目指そう！</p>
+  </div>
+
+  <!-- 使い方ステップ -->
+  <div class="card mb-4">
+    <h2 class="text-white font-black text-base mb-5 flex items-center gap-2">
+      <i class="ri-map-2-line text-indigo-400"></i> 使い方
+    </h2>
+    <div class="space-y-5">
+
+      <div class="flex gap-4">
+        <div class="step-num">1</div>
+        <div class="flex-1 pt-1">
+          <p class="text-white font-bold text-sm">メールアドレスを入力</p>
+          <p class="text-slate-400 text-xs mt-1 leading-relaxed">入力するとマジックリンクが届き、スマホ・タブレット・PCどこからでも続きからプレイできます。<br>入力しなくてもゲストとして遊べます。</p>
+        </div>
+      </div>
+
+      <div class="flex gap-4">
+        <div class="step-num">2</div>
+        <div class="flex-1 pt-1">
+          <p class="text-white font-bold text-sm">プレイヤー登録（最初の1回だけ）</p>
+          <p class="text-slate-400 text-xs mt-1">名前・所属園・研修日を入力します。次回からは自動で表示されます。</p>
+        </div>
+      </div>
+
+      <div class="flex gap-4">
+        <div class="step-num">3</div>
+        <div class="flex-1 pt-1">
+          <p class="text-white font-bold text-sm">クエスト（テーマ）を選ぶ</p>
+          <p class="text-slate-400 text-xs mt-1">5つのテーマがあります。好きなものから始めてOK。クリア済みのカードは光ります。</p>
+        </div>
+      </div>
+
+      <div class="flex gap-4">
+        <div class="step-num">4</div>
+        <div class="flex-1 pt-1">
+          <p class="text-white font-bold text-sm">7つのミッションに答える</p>
+          <p class="text-slate-400 text-xs mt-1">1問ずつ画面が切り替わります。答えるたびに <span class="text-yellow-400 font-bold">+50 XP</span>。全部答えたら <span class="text-yellow-400 font-bold">+500 XP</span> でカード解放！</p>
+        </div>
+      </div>
+
+      <div class="flex gap-4">
+        <div class="step-num">5</div>
+        <div class="flex-1 pt-1">
+          <p class="text-white font-bold text-sm">5テーマ制覇で「きらりマスター」🏆</p>
+          <p class="text-slate-400 text-xs mt-1">全テーマをクリアするとトロフィーと称号が表示されます。</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 5テーマ -->
+  <div class="card mb-4">
+    <h2 class="text-white font-black text-base mb-4 flex items-center gap-2">
+      <i class="ri-stack-line text-indigo-400"></i> 5つのクエスト
+    </h2>
+    <div class="space-y-2">
+      <div class="theme-card bg-rose-500/10 border border-rose-500/20">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center flex-shrink-0">
+          <i class="ri-heart-3-fill text-white"></i>
+        </div>
+        <div>
+          <p class="text-white font-black text-sm">保育観</p>
+          <p class="text-slate-400 text-xs">なぜ保育士をやっているか・自分の軸</p>
+        </div>
+      </div>
+      <div class="theme-card bg-amber-500/10 border border-amber-500/20">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0">
+          <i class="ri-user-smile-fill text-white"></i>
+        </div>
+        <div>
+          <p class="text-white font-black text-sm">顧客目線</p>
+          <p class="text-slate-400 text-xs">保護者・子ども目線の保育・身だしなみ</p>
+        </div>
+      </div>
+      <div class="theme-card bg-emerald-500/10 border border-emerald-500/20">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center flex-shrink-0">
+          <i class="ri-seedling-fill text-white"></i>
+        </div>
+        <div>
+          <p class="text-white font-black text-sm">正しい保育</p>
+          <p class="text-slate-400 text-xs">発達に基づいた関わり・待つ保育</p>
+        </div>
+      </div>
+      <div class="theme-card bg-sky-500/10 border border-sky-500/20">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center flex-shrink-0">
+          <i class="ri-mental-health-fill text-white"></i>
+        </div>
+        <div>
+          <p class="text-white font-black text-sm">自分の健康</p>
+          <p class="text-slate-400 text-xs">体と心を整える・自分のケア</p>
+        </div>
+      </div>
+      <div class="theme-card bg-violet-500/10 border border-violet-500/20">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+          <i class="ri-shield-check-fill text-white"></i>
+        </div>
+        <div>
+          <p class="text-white font-black text-sm">安心・安全</p>
+          <p class="text-slate-400 text-xs">ヒヤリハット・トラブル対応</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ポイント -->
+  <div class="card mb-6">
+    <h2 class="text-white font-black text-base mb-4 flex items-center gap-2">
+      <i class="ri-information-line text-indigo-400"></i> ポイント
+    </h2>
+    <div class="space-y-3">
+      <div class="flex gap-3 items-start">
+        <i class="ri-pencil-line text-indigo-400 mt-0.5 flex-shrink-0"></i>
+        <p class="text-slate-400 text-sm">「頑張ります」ではなく、<span class="text-white font-bold">動詞で具体的に</span>書くとXPが多くもらえます</p>
+      </div>
+      <div class="flex gap-3 items-start">
+        <i class="ri-arrow-go-back-line text-indigo-400 mt-0.5 flex-shrink-0"></i>
+        <p class="text-slate-400 text-sm">「戻る」ボタンで前の回答をいつでも修正できます</p>
+      </div>
+      <div class="flex gap-3 items-start">
+        <i class="ri-save-line text-indigo-400 mt-0.5 flex-shrink-0"></i>
+        <p class="text-slate-400 text-sm">途中で閉じても、同じデバイスなら続きからプレイできます</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- スタートボタン -->
+  <a href="https://academy.kirari-hoiku.com"
+    class="block w-full py-4 rounded-2xl font-black text-base text-center bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30 active:scale-95 transition-all flex items-center justify-center gap-2">
+    <i class="ri-play-fill"></i> ゲームを始める
+  </a>
+
+  <p class="text-center text-slate-700 text-xs mt-6 pb-6">KIRARI ACADEMY — きらり保育士 育成システム</p>
+
+</body>
+</html>
